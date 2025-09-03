@@ -16,8 +16,6 @@ interface ProductionData {
   nama: string;
   divisi: string;
   total_produksi: number;
-  gaji_dasar: number;
-  bonus_produksi: number;
   total_gaji: number;
   productions: {
     nama_barang: string;
@@ -31,11 +29,11 @@ const ProductionRecap = () => {
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-  // Salary calculations based on division
-  const salaryConfig = {
-    tabung: { base: 3500000, bonus_per_unit: 1500 },
-    asesoris: { base: 3200000, bonus_per_unit: 1200 },
-    packing: { base: 3000000, bonus_per_unit: 1000 },
+  // Per-piece payment rates based on division
+  const paymentRates = {
+    tabung: 8000,
+    asesoris: 500,
+    packing: 4000,
   };
 
   useEffect(() => {
@@ -73,18 +71,15 @@ const ProductionRecap = () => {
 
       productionRaw?.forEach((item: any) => {
         const employeeId = item.karyawan.id_karyawan;
-        const divisi = item.karyawan.divisi as keyof typeof salaryConfig;
+        const divisi = item.karyawan.divisi as keyof typeof paymentRates;
         
         if (!groupedData[employeeId]) {
-          const config = salaryConfig[divisi];
           groupedData[employeeId] = {
             id_karyawan: employeeId,
             nama: item.karyawan.nama,
             divisi: item.karyawan.divisi,
             total_produksi: 0,
-            gaji_dasar: config.base,
-            bonus_produksi: 0,
-            total_gaji: config.base,
+            total_gaji: 0,
             productions: []
           };
         }
@@ -97,11 +92,10 @@ const ProductionRecap = () => {
         });
       });
 
-      // Calculate bonuses and total salaries
+      // Calculate total salaries based on per-piece rates
       Object.values(groupedData).forEach((employee) => {
-        const config = salaryConfig[employee.divisi as keyof typeof salaryConfig];
-        employee.bonus_produksi = employee.total_produksi * config.bonus_per_unit;
-        employee.total_gaji = employee.gaji_dasar + employee.bonus_produksi;
+        const rate = paymentRates[employee.divisi as keyof typeof paymentRates];
+        employee.total_gaji = employee.total_produksi * rate;
       });
 
       setProductionData(Object.values(groupedData));
@@ -138,15 +132,14 @@ const ProductionRecap = () => {
       'Nama Karyawan': emp.nama,
       'Divisi': emp.divisi.charAt(0).toUpperCase() + emp.divisi.slice(1),
       'Total Produksi': emp.total_produksi.toString(),
-      'Gaji Dasar': formatCurrencyForExport(emp.gaji_dasar),
-      'Bonus Produksi': formatCurrencyForExport(emp.bonus_produksi),
+      'Rate per Pcs': formatCurrencyForExport(paymentRates[emp.divisi as keyof typeof paymentRates]),
       'Total Gaji': formatCurrencyForExport(emp.total_gaji)
     }));
 
     exportToPDF(
       `Rekap Produksi & Gaji - ${format(selectedMonth, 'MMMM yyyy', { locale: id })}`,
       exportData,
-      ['Nama Karyawan', 'Divisi', 'Total Produksi', 'Gaji Dasar', 'Bonus Produksi', 'Total Gaji'],
+      ['Nama Karyawan', 'Divisi', 'Total Produksi', 'Rate per Pcs', 'Total Gaji'],
       `rekap-produksi-gaji-${format(selectedMonth, 'yyyy-MM')}`
     );
   };
@@ -275,15 +268,15 @@ const ProductionRecap = () => {
                 </div>
               </div>
 
-              {/* Salary Breakdown */}
+              {/* Salary Calculation */}
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Gaji Dasar</span>
-                  <span>{formatCurrency(employee.gaji_dasar)}</span>
+                  <span>Rate per Pcs</span>
+                  <span>{formatCurrency(paymentRates[employee.divisi as keyof typeof paymentRates])}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Bonus Produksi</span>
-                  <span className="text-success">+{formatCurrency(employee.bonus_produksi)}</span>
+                  <span>Total Pcs</span>
+                  <span>{employee.total_produksi} unit</span>
                 </div>
                 <div className="border-t pt-2">
                   <div className="flex justify-between font-semibold">

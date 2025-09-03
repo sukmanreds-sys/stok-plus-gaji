@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, AlertTriangle, Plus, Search, Filter, Download } from "lucide-react";
+import { Package, AlertTriangle, Plus, Search, Filter, Download, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -117,6 +117,27 @@ const Stock = () => {
       currency: 'IDR',
       minimumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleDeleteItem = async (itemId: string, itemName: string) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus barang "${itemName}"?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('barang')
+        .delete()
+        .eq('id_barang', itemId);
+
+      if (error) throw error;
+      
+      toast.success(`Barang "${itemName}" berhasil dihapus`);
+      fetchStockData();
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Gagal menghapus barang');
+    }
   };
 
   const handleExportPDF = () => {
@@ -306,6 +327,7 @@ const Stock = () => {
                   <th className="text-left py-3 px-4 font-medium">Status</th>
                   <th className="text-right py-3 px-4 font-medium">HPP</th>
                   <th className="text-right py-3 px-4 font-medium">Nilai</th>
+                  <th className="text-center py-3 px-4 font-medium">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -345,6 +367,16 @@ const Stock = () => {
                       </td>
                       <td className="py-3 px-4 text-right font-mono font-semibold">
                         {formatCurrency(item.stok * item.harga)}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteItem(item.id_barang, item.nama_barang)}
+                          className="hover:bg-destructive hover:text-destructive-foreground"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   );

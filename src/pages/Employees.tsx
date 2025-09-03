@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Plus, UserCheck, Building2, Download } from "lucide-react";
+import { Users, Plus, UserCheck, Building2, Download, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AddEmployeeForm from "@/components/forms/AddEmployeeForm";
@@ -63,6 +63,27 @@ const Employees = () => {
     tabung: employees.filter(emp => emp.divisi === 'tabung').length,
     asesoris: employees.filter(emp => emp.divisi === 'asesoris').length,
     packing: employees.filter(emp => emp.divisi === 'packing').length,
+  };
+
+  const handleDeleteEmployee = async (employeeId: string, employeeName: string) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus karyawan "${employeeName}"?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('karyawan')
+        .delete()
+        .eq('id_karyawan', employeeId);
+
+      if (error) throw error;
+      
+      toast.success(`Karyawan "${employeeName}" berhasil dihapus`);
+      fetchEmployees();
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+      toast.error('Gagal menghapus karyawan');
+    }
   };
 
   const handleExportPDF = () => {
@@ -206,8 +227,13 @@ const Employees = () => {
                 <Button variant="outline" size="sm" className="flex-1">
                   Edit
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  Detail
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleDeleteEmployee(employee.id_karyawan, employee.nama)}
+                  className="hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </CardContent>
