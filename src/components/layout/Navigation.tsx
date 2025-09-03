@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Package, Users, TrendingUp, BarChart3, Coins, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, Users, TrendingUp, BarChart3, Coins, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/enhanced-button";
@@ -18,6 +18,11 @@ const Navigation = () => {
       name: "Stok Barang",
       href: "/stock",
       icon: Package,
+    },
+    {
+      name: "Transaksi",
+      href: "/transactions",
+      icon: ArrowUpDown,
     },
     {
       name: "Rekap Produksi",

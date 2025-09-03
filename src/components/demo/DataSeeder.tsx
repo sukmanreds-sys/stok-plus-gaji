@@ -116,6 +116,49 @@ const DataSeeder = () => {
         .limit(3);
 
       if (barangData && karyawanData && barangData.length > 0 && karyawanData.length > 0) {
+        // Add sample transactions
+        const sampleTransactions = [
+          {
+            id_barang: barangData[0].id_barang,
+            jumlah: 50,
+            jenis: 'masuk' as const,
+            keterangan: 'Pembelian stock awal'
+          },
+          {
+            id_barang: barangData[1].id_barang,
+            jumlah: 30,
+            jenis: 'masuk' as const,
+            keterangan: 'Pembelian stock tambahan'
+          },
+          {
+            id_barang: barangData[0].id_barang,
+            jumlah: 10,
+            jenis: 'keluar_penjualan' as const,
+            keterangan: 'Penjualan ke customer'
+          },
+          {
+            id_barang: barangData[2].id_barang,
+            jumlah: 25,
+            jenis: 'keluar_produksi' as const,
+            keterangan: 'Digunakan untuk produksi tabung'
+          },
+          {
+            id_barang: barangData[1].id_barang,
+            jumlah: 5,
+            jenis: 'keluar_lainnya' as const,
+            keterangan: 'Barang rusak/hilang'
+          }
+        ];
+
+        const { error: transaksiError } = await supabase
+          .from('transaksi')
+          .insert(sampleTransactions);
+
+        if (transaksiError) {
+          console.error('Error inserting transaksi:', transaksiError);
+        }
+
+        // Add sample production data
         const sampleProduction = [
           {
             id_barang: barangData[0].id_barang,
@@ -230,6 +273,7 @@ const DataSeeder = () => {
           <ul className="mt-1 space-y-1">
             <li>• 6 jenis barang (tabung gas, asesoris, bahan baku)</li>
             <li>• 5 karyawan dari berbagai divisi</li>
+            <li>• 5 transaksi contoh (masuk/keluar)</li>
             <li>• 2 record produksi contoh</li>
             <li>• Beberapa item dengan stok menipis untuk demo peringatan</li>
           </ul>
