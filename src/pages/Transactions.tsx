@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Plus, Search, TrendingDown, TrendingUp, Package2, ShoppingCart, Settings } from "lucide-react";
+import { ArrowUpDown, Plus, Search, TrendingDown, TrendingUp, Package2, ShoppingCart, Settings, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import AddTransactionForm from "@/components/forms/AddTransactionForm";
+import { exportToPDF, formatCurrencyForExport, formatDateForExport } from "@/components/utils/exportToPDF";
 
 interface Transaction {
   id_transaksi: string;
@@ -206,10 +208,29 @@ const Transactions = () => {
             </p>
           </div>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Tambah Transaksi
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => {
+            const exportData = filteredData.map(transaction => ({
+              'Tanggal': formatDateForExport(transaction.tanggal),
+              'Barang': transaction.barang?.nama_barang || 'Barang Tidak Ditemukan',
+              'Jenis Transaksi': getTransactionTypeLabel(transaction.jenis),
+              'Jumlah': (transaction.jenis === 'masuk' ? '+' : '-') + transaction.jumlah.toLocaleString(),
+              'Nilai': transaction.barang ? formatCurrencyForExport(transaction.jumlah * transaction.barang.harga) : '-',
+              'Keterangan': transaction.keterangan || '-'
+            }));
+
+            exportToPDF(
+              'Laporan Transaksi Barang',
+              exportData,
+              ['Tanggal', 'Barang', 'Jenis Transaksi', 'Jumlah', 'Nilai', 'Keterangan'],
+              'laporan-transaksi'
+            );
+          }}>
+            <Download className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
+          <AddTransactionForm onSuccess={() => fetchTransactions()} />
+        </div>
       </div>
 
       {/* Quick Stats */}

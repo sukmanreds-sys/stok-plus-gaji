@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, AlertTriangle, Plus, Search, Filter } from "lucide-react";
+import { Package, AlertTriangle, Plus, Search, Filter, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AddStockForm from "@/components/forms/AddStockForm";
+import { exportToPDF, formatCurrencyForExport } from "@/components/utils/exportToPDF";
 
 interface StockItem {
   id_barang: string;
@@ -117,6 +119,25 @@ const Stock = () => {
     }).format(amount);
   };
 
+  const handleExportPDF = () => {
+    const exportData = filteredData.map(item => ({
+      'Nama Barang': item.nama_barang,
+      'Jenis': item.jenis === 'bahan_baku' ? 'Bahan Baku' : 'Barang Jadi',
+      'Stok': item.stok.toString(),
+      'Min. Stok': item.stok_minimum.toString(),
+      'Status': getStockStatus(item.stok, item.stok_minimum),
+      'Harga': formatCurrencyForExport(item.harga),
+      'Total Nilai': formatCurrencyForExport(item.stok * item.harga)
+    }));
+
+    exportToPDF(
+      'Laporan Stok Barang',
+      exportData,
+      ['Nama Barang', 'Jenis', 'Stok', 'Min. Stok', 'Status', 'Harga', 'Total Nilai'],
+      'laporan-stok'
+    );
+  };
+
   const lowStockCount = stockData.filter(item => item.stok <= item.stok_minimum).length;
   const outOfStockCount = stockData.filter(item => item.stok === 0).length;
 
@@ -154,10 +175,13 @@ const Stock = () => {
             </p>
           </div>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Tambah Barang
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportPDF}>
+            <Download className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
+          <AddStockForm onSuccess={() => fetchStockData()} />
+        </div>
       </div>
 
       {/* Quick Stats */}

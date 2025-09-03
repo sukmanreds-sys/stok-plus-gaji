@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { exportToPDF, formatCurrencyForExport, formatDateForExport } from "@/components/utils/exportToPDF";
 
 interface ProductionData {
   id_karyawan: string;
@@ -130,6 +133,30 @@ const ProductionRecap = () => {
   const totalGajiKeseluruhan = productionData.reduce((sum, emp) => sum + emp.total_gaji, 0);
   const totalProduksiKeseluruhan = productionData.reduce((sum, emp) => sum + emp.total_produksi, 0);
 
+  const handleExportPDF = () => {
+    const exportData = productionData.map(emp => ({
+      'Nama Karyawan': emp.nama,
+      'Divisi': emp.divisi.charAt(0).toUpperCase() + emp.divisi.slice(1),
+      'Total Produksi': emp.total_produksi.toString(),
+      'Gaji Dasar': formatCurrencyForExport(emp.gaji_dasar),
+      'Bonus Produksi': formatCurrencyForExport(emp.bonus_produksi),
+      'Total Gaji': formatCurrencyForExport(emp.total_gaji)
+    }));
+
+    exportToPDF(
+      `Rekap Produksi & Gaji - ${format(selectedMonth, 'MMMM yyyy', { locale: id })}`,
+      exportData,
+      ['Nama Karyawan', 'Divisi', 'Total Produksi', 'Gaji Dasar', 'Bonus Produksi', 'Total Gaji'],
+      `rekap-produksi-gaji-${format(selectedMonth, 'yyyy-MM')}`
+    );
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedMonth(date);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -163,11 +190,23 @@ const ProductionRecap = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <CalendarIcon className="h-4 w-4 mr-2" />
-            Pilih Periode
-          </Button>
-          <Button variant="outline" size="sm">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                Pilih Periode
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={selectedMonth}
+                onSelect={handleDateSelect}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <Button variant="outline" size="sm" onClick={handleExportPDF}>
             <Download className="h-4 w-4 mr-2" />
             Export PDF
           </Button>

@@ -1,10 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/enhanced-card";
 import StockOverview from "@/components/dashboard/StockOverview";
-import DataSeeder from "@/components/demo/DataSeeder";
-import { BarChart3, Sparkles } from "lucide-react";
+import { BarChart3, Sparkles, Package, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/enhanced-button";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between animate-fade-in">
@@ -25,9 +27,6 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {/* Data Seeder Component */}
-      <DataSeeder />
-
       <StockOverview />
 
       {/* Quick Actions Card */}
@@ -44,16 +43,16 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="h-12 justify-start">
+            <Button variant="outline" className="h-12 justify-start" onClick={() => navigate('/production')}>
               <BarChart3 className="h-4 w-4 mr-2" />
               Lihat Laporan
             </Button>
-            <Button variant="outline" className="h-12 justify-start">
-              <BarChart3 className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="h-12 justify-start" onClick={() => navigate('/stock')}>
+              <Package className="h-4 w-4 mr-2" />
               Tambah Barang
             </Button>
-            <Button variant="outline" className="h-12 justify-start">
-              <BarChart3 className="h-4 w-4 mr-2" />
+            <Button variant="outline" className="h-12 justify-start" onClick={() => navigate('/employees')}>
+              <Users className="h-4 w-4 mr-2" />
               Input Produksi
             </Button>
           </div>

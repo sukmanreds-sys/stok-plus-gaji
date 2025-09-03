@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Plus, UserCheck, Building2 } from "lucide-react";
+import { Users, Plus, UserCheck, Building2, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AddEmployeeForm from "@/components/forms/AddEmployeeForm";
+import { exportToPDF, formatDateForExport } from "@/components/utils/exportToPDF";
 
 interface Employee {
   id_karyawan: string;
@@ -63,6 +65,23 @@ const Employees = () => {
     packing: employees.filter(emp => emp.divisi === 'packing').length,
   };
 
+  const handleExportPDF = () => {
+    const exportData = employees.map(emp => ({
+      'Nama': emp.nama,
+      'Divisi': emp.divisi.charAt(0).toUpperCase() + emp.divisi.slice(1),
+      'ID Karyawan': emp.id_karyawan.slice(0, 8),
+      'Tanggal Bergabung': formatDateForExport(emp.created_at),
+      'Status': 'Aktif'
+    }));
+
+    exportToPDF(
+      'Daftar Karyawan',
+      exportData,
+      ['Nama', 'Divisi', 'ID Karyawan', 'Tanggal Bergabung', 'Status'],
+      'daftar-karyawan'
+    );
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -97,10 +116,13 @@ const Employees = () => {
             </p>
           </div>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Tambah Karyawan
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportPDF}>
+            <Download className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
+          <AddEmployeeForm onSuccess={() => fetchEmployees()} />
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -201,10 +223,7 @@ const Employees = () => {
             <p className="text-muted-foreground text-center">
               Belum ada karyawan yang terdaftar dalam sistem
             </p>
-            <Button className="mt-4">
-              <Plus className="h-4 w-4 mr-2" />
-              Tambah Karyawan Pertama
-            </Button>
+            <AddEmployeeForm onSuccess={() => fetchEmployees()} />
           </CardContent>
         </Card>
       )}
